@@ -1,0 +1,89 @@
+---
+title: "ChiSqCountDataInf"
+author: "Chris Kalra"
+date: "11/29/2018"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+#Part 1
+```{r}
+#install.packages("resampledata")
+library("resampledata")
+data("GSS2002")
+indexdeath=which(is.na(GSS2002$DeathPenalty))
+deathpenalty=GSS2002$DeathPenalty[-indexdeath]
+n1=length(deathpenalty)
+phat1=sum(deathpenalty == 'Favor') / n1
+z1=qnorm(.975)
+se = sqrt(phat1 * (1-phat1) / n1)
+CIlow = phat1 - z1*se ; CIup = phat1 + z1*se
+CIlow ; CIup
+```
+
+We are 95% confident that the true proportion of Americans that favor the death penality is between 0.6621855 and 0.7124322
+
+#Part 2
+```{r}
+index2=which(is.na(GSS2002$Gender) | is.na(GSS2002$DeathPenalty))
+gender=GSS2002$Gender[-index2]
+deathpenalty=GSS2002$DeathPenalty[-index2]
+n_f = sum(gender=='Female')
+n_m = sum(gender=='Male')
+phat_f = sum(gender=='Female' & deathpenalty=='Favor') / n_f
+phat_m = sum(gender=='Male' & deathpenalty=='Favor') / n_m
+se2 = sqrt(phat1*(1-phat1)*(1/n_f +  1/n_m))
+z2=(phat_m - phat_f)/se2 ; z2
+pvalue2 = 2*(1-pnorm(z2)) ; pvalue2
+```
+
+With a z value of 4.9306 and a p-value of less than .0001, we reject the null hypothesis, and thus conclude that different proportions of males and females support the death penalty 
+
+#Part 3
+```{r}
+diff=phat_m - phat_f
+se_m = ((phat_m)*(1-phat_m)) / n_m
+se_f = ((phat_f)*(1-phat_f)) / n_f
+se3=sqrt(se_m + se_f)
+CIlow3 = diff - z1*se3 ; CIhigh3 = diff + z1*se3
+CIlow3 ; CIhigh3
+```
+
+We are 95% confident that the difference in population proportions between males and females who favor the death penality is between 0.07687 and 0.1761
+
+This interval does not contain 0, so we reject the null hypothesis, and thus conclude that different proportions of males and females support the death penalty. This agrees with our conclusion from exercise 2
+
+#Part 4
+```{r}
+#a)
+index4=which(is.na(GSS2002$Education) | is.na(GSS2002$DeathPenalty))
+education=GSS2002$Education[-index4]
+deathpenalty4=GSS2002$DeathPenalty[-index4]
+addmargins(table(education, deathpenalty4))
+#b)
+prop.table(table(education, deathpenalty4), margin=1)
+```
+
+Yes, there does appear to be a difference in row proportions, indicating a relationship between level of education and opinion on the death penalty
+
+```{r}
+#c)
+index4c = which(is.na(GSS2002$Education) | is.na(GSS2002$SpendSci))
+spendsci = GSS2002$SpendSci[-index4c]
+education = GSS2002$Education[-index4c]
+chisq4c = chisq.test(education, spendsci) ; chisq4c
+```
+
+Null Hypothesis: Education level and opinion of how much is spent on scientific research are independent
+
+Alternative Hypothesis: Education level and opinion of how much is spent on scientific research are not independent 
+
+With a p-value of 0.4257, we fail to reject the null hypothesis, and thus conclude education level and opinion of how much is spent on scientific research are independent
+
+```{r}
+#d and e)
+chisq4c$expected
+```
+
+Each cell has an expected count of at least 5, and by default we assume random sampling, so yes, the assumptions are satisfied
